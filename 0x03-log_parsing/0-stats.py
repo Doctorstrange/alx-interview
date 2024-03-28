@@ -6,6 +6,7 @@ line and computes metrics:
 import sys
 import re
 
+
 def output(log):
     """
     Helper function to display stats
@@ -15,13 +16,17 @@ def output(log):
         if log["code_frequency"][code]:
             print(code + ":", log["code_frequency"][code])
 
+
 if __name__ == "__main__":
     regex = re.compile(
-        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} - \[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d+\] "GET /projects/260 HTTP/1.1" (.{3}) (\d+)'
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} - '
+        r'\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d+\] '
+        r'"GET /projects/260 HTTP/1.1" (.{3}) (\d+)'
     )
 
     count = 0
-    log = {"size": 0, "code_frequency": {str(code): 0 for code in [200, 301, 400, 401, 403, 404, 405, 500]}}
+    log = {"size": 0, "code_frequency":
+           {str(code): 0 for code in [200, 301, 400, 401, 403, 404, 405, 500]}}
 
     try:
         for line in sys.stdin:

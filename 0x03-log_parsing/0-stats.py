@@ -4,28 +4,40 @@ script that reads stdin line by
 line and computes metrics:
 """
 import sys
+import re
 
-full_size = 0
-status_codes = {}
-line_count = 0
+def output(log):
+    """
+    Helper function to display stats
+    """
+    print("File size:", log["size"])
+    for code in sorted(log["code_frequency"]):
+        if log["code_frequency"][code]:
+            print(code + ":", log["code_frequency"][code])
 
-try:
-    for line in sys.stdin:
-        try:
-            ip, date, request, status_code, file_size = line.split(" ", 4)
-            file_size = int(file_size)
-            full_size += file_size
-            status_codes[status_code] = status_codes.get(status_code, 0) + 1
-        except ValueError:
-            pass
+if __name__ == "__main__":
+    regex = re.compile(
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} - \[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d+\] "GET /projects/260 HTTP/1.1" (.{3}) (\d+)'
+    )
 
-        line_count += 1
-        if line_count % 10 == 0:
-            print("File size:", full_size)
-            print(*[f"{code}: {count}"
-                    for code, count in sorted(status_codes.items())], sep="\n")
+    count = 0
+    log = {"size": 0, "code_frequency": {str(code): 0 for code in [200, 301, 400, 401, 403, 404, 405, 500]}}
 
-except KeyboardInterrupt:
-    print("File size:", full_size)
-    print(*[f"{code}: {count}"
-            for code, count in sorted(status_codes.items())], sep="\n")
+    try:
+        for line in sys.stdin:
+            line = line.strip()
+            match = regex.fullmatch(line)
+            if match:
+                count += 1
+                code = match.group(1)
+                size = int(match.group(2))
+
+                log["size"] += size
+
+                if code.isdecimal():
+                    log["code_frequency"][code] += 1
+
+                if count % 10 == 0:
+                    output(log)
+    finally:
+        output(log)
